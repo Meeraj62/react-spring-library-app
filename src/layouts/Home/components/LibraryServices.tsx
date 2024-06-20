@@ -16,7 +16,7 @@ export const LibraryServices = () => {
                         </a>
                     </div>
                 </div>
-                <div className='col-lg-4 offset-lg-1 shadow-lg lost-image' style={{ backgroundImage: 'url(/path/to/your/image.jpg)', backgroundSize: 'cover', height: '300px' }}></div>
+                <div className='col-lg-4 offset-lg-1 shadow-lg lost-image'></div>
             </div>
         </div>
     );

@@ -1,0 +1,15 @@
+import { BookCarousel } from "./components/BookCarousel";
+import { ExploreTopBooks } from "./components/ExploreTopBooks";
+import { Heros } from "./components/Heros";
+import { LibraryServices } from "./components/LibraryServices";
+
+export const Home = () => {
+    return (
+        <>
+            <ExploreTopBooks />
+            <BookCarousel />
+            <Heros />
+            <LibraryServices />
+        </>
+    );
+}
