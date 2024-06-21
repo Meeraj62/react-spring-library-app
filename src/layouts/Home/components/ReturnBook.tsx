@@ -1,18 +1,28 @@
 import React from 'react';
+import BookModel from '../../../models/BookModel';
 
-export const ReturnBook = () => {
+export const ReturnBook: React.FC<{ book: BookModel }> = (props) => {
     return (
-        <div className="card mx-2 shadow-sm" style={{ width: '12rem' }}>
-            <img
-                src={require('../../../Images/BooksImages/new-book.png')}
-                className="card-img-top"
-                alt="Book"
-                style={{ height: '250px', objectFit: 'cover' }}
-            />
-            <div className="card-body text-center">
-                <h5 className="card-title">Book Title 1</h5>
-                <p className="card-text">Book Author 1</p>
-                <button className="btn btn-primary">Read More</button>
+        <div className='col-xs-6 col-sm-6 col-md-4 col-lg-3 mb-3'>
+            <div className='text-center'>
+                {props.book.img ?
+                    <img
+                        src={props.book.img}
+                        width='151'
+                        height='233'
+                        alt="book"
+                    />
+                    :
+                    <img
+                        src={require('./../../../Images/BooksImages/new-book.png')}
+                        width='151'
+                        height='233'
+                        alt="book"
+                    />
+                }
+                <h6 className='mt-2'>{props.book.title}</h6>
+                <p>{props.book.author}</p>
+                <a className='btn main-color text-white' href={`checkout/${props.book.id}`}>Reserve</a>
             </div>
         </div>
     );
