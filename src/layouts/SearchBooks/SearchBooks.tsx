@@ -2,17 +2,23 @@ import { useEffect, useState } from "react";
 import BookModel from "../../models/BookModel";
 import { SpinnerLoading } from "../Utils/SpinnerLoading";
 import { SearchTheBook } from "./components/SearchTheBook";
+import { Pagination } from "../Utils/Pagination";
 
 export const SearchBooks = () => {
     const [books, setBooks] = useState<BookModel[]>([]);
     const [isLoading, setIsLoading] = useState<boolean>(true);
     const [httpError, setHttpError] = useState<string | null>(null);
+    
+    const [currentPage, setCurrentPage] = useState(1);
+    const [booksPerPage] = useState(5);
+    const [totalAmountOfBooks, setTotalAmountOfBooks] = useState(0);
+    const [totalPages, setTotalPages] = useState(0);
 
     useEffect(() => {
         const fetchBooks = async () => {
             try {
                 const baseUrl: string = 'http://localhost:8080/api/books';
-                const url: string = `${baseUrl}?page=0&size=5`;
+                const url: string = `${baseUrl}?page=${currentPage - 1}&size=${booksPerPage}`;
                 const response = await fetch(url);
 
                 if (!response.ok) {
@@ -21,6 +27,9 @@ export const SearchBooks = () => {
 
                 const responseJson = await response.json();
                 const responseData = responseJson._embedded.books;
+
+                setTotalAmountOfBooks(responseJson.page.totalElements);
+                setTotalPages(responseJson.page.totalPages);
 
                 const loadedBooks: BookModel[] = responseData.map((book: any) => ({
                     id: book.id,
@@ -42,7 +51,7 @@ export const SearchBooks = () => {
         };
 
         fetchBooks();
-    }, []);
+    }, [currentPage]);
 
     if (isLoading) {
         return <SpinnerLoading />;
@@ -56,11 +65,16 @@ export const SearchBooks = () => {
         );
     }
 
+    const paginate = (pageNumber: number) => setCurrentPage(pageNumber);
+
     return (
         <div className="container">
             <SearchHeader />
-            <ResultsInfo resultsCount={22} />
+            <ResultsInfo resultsCount={totalAmountOfBooks} />
             <BooksList books={books} />
+            {totalPages > 1 && 
+                <Pagination currentPage={currentPage} totalPages={totalPages} paginate={paginate} />
+            }
         </div>
     );
 };
