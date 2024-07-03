@@ -8,17 +8,23 @@ export const SearchBooks = () => {
     const [books, setBooks] = useState<BookModel[]>([]);
     const [isLoading, setIsLoading] = useState<boolean>(true);
     const [httpError, setHttpError] = useState<string | null>(null);
-    
+
     const [currentPage, setCurrentPage] = useState(1);
     const [booksPerPage] = useState(5);
     const [totalAmountOfBooks, setTotalAmountOfBooks] = useState(0);
     const [totalPages, setTotalPages] = useState(0);
 
+    const [search, setSearch] = useState('');
+    const [searchUrl, setSearchUrl] = useState('');
+
     useEffect(() => {
         const fetchBooks = async () => {
             try {
                 const baseUrl: string = 'http://localhost:8080/api/books';
-                const url: string = `${baseUrl}?page=${currentPage - 1}&size=${booksPerPage}`;
+                let url: string = searchUrl === '' 
+                    ? `${baseUrl}?page=${currentPage - 1}&size=${booksPerPage}` 
+                    : `${baseUrl}${searchUrl}`;
+
                 const response = await fetch(url);
 
                 if (!response.ok) {
@@ -51,7 +57,18 @@ export const SearchBooks = () => {
         };
 
         fetchBooks();
-    }, [currentPage]);
+
+        window.scrollTo(0, 0);
+    }, [currentPage, searchUrl]);
+
+    const searchHandleChange = () => {
+        if (search === '') {
+            setSearchUrl('');
+        } else {
+            setSearchUrl(`/search/findByTitleContaining?title=${search}&page=0&size=${booksPerPage}`);
+        }
+        setCurrentPage(1);
+    }
 
     if (isLoading) {
         return <SpinnerLoading />;
@@ -65,21 +82,41 @@ export const SearchBooks = () => {
         );
     }
 
+    const indexOfLastBook = currentPage * booksPerPage;
+    const indexOfFirstBook = indexOfLastBook - booksPerPage;
+    const lastItem = booksPerPage * currentPage <= totalAmountOfBooks 
+        ? booksPerPage * currentPage 
+        : totalAmountOfBooks;
+
     const paginate = (pageNumber: number) => setCurrentPage(pageNumber);
 
     return (
         <div className="container">
-            <SearchHeader />
-            <ResultsInfo resultsCount={totalAmountOfBooks} />
-            <BooksList books={books} />
-            {totalPages > 1 && 
-                <Pagination currentPage={currentPage} totalPages={totalPages} paginate={paginate} />
-            }
+            <SearchHeader 
+                search={search} 
+                setSearch={setSearch} 
+                searchHandleChange={searchHandleChange} 
+            />
+            {books.length > 0 ? (
+                <>
+                    <ResultsInfo 
+                        resultsCount={totalAmountOfBooks} 
+                        indexOfFirstBook={indexOfFirstBook}
+                        lastItem={lastItem}
+                    />
+                    <BooksList books={books} />
+                    {totalPages > 1 && 
+                        <Pagination currentPage={currentPage} totalPages={totalPages} paginate={paginate} />
+                    }
+                </>
+            ) : (
+                <NoResults />
+            )}
         </div>
     );
 };
 
-const SearchHeader = () => (
+const SearchHeader = ({ search, setSearch, searchHandleChange }: { search: string, setSearch: (search: string) => void, searchHandleChange: () => void }) => (
     <div className="row mt-5">
         <div className="col-6">
             <div className="d-flex">
@@ -88,8 +125,15 @@ const SearchHeader = () => (
                     type="search"
                     placeholder="Search"
                     aria-labelledby="Search"
+                    value={search}
+                    onChange={e => setSearch(e.target.value)}
                 />
-                <button className="btn btn-outline-success">Search</button>
+                <button 
+                    className="btn btn-outline-success"
+                    onClick={searchHandleChange}
+                >
+                    Search
+                </button>
             </div>
         </div>
         <div className="col-4">
@@ -121,12 +165,18 @@ const CategoryDropdown = () => (
     </div>
 );
 
-const ResultsInfo = ({ resultsCount }: { resultsCount: number }) => (
+interface ResultsInfoProps {
+    resultsCount: number;
+    indexOfFirstBook: number;
+    lastItem: number;
+}
+
+const ResultsInfo = ({ resultsCount, indexOfFirstBook, lastItem }: ResultsInfoProps) => (
     <>
         <div className="mt-3">
             <h5>Number of results: ({resultsCount})</h5>
         </div>
-        <p>1 to 5 of {resultsCount} items:</p>
+        <p>{indexOfFirstBook + 1} to {lastItem} of {resultsCount} items:</p>
     </>
 );
 
@@ -135,5 +185,26 @@ const BooksList = ({ books }: { books: BookModel[] }) => (
         {books.map((book) => (
             <SearchTheBook book={book} key={book.id} />
         ))}
+    </div>
+);
+
+const NoResults = () => (
+    <div className="container my-5">
+        <div className="row p-4 align-items-center border shadow-lg">
+            <div className="col-lg-7 p-3">
+                <h1 className="display-4 fw-bold">
+                    Can't find what you are looking for?
+                </h1>
+                <p className="lead">
+                    If you cannot find what you are looking for, you can explore our full library collection.
+                </p>
+                <div className="d-grid gap-2 justify-content-md-start mb-4 mb-lg-3">
+                    <a href="/books" className="btn main-color btn-lg px-4 me-md-2 fw-bold text-white">
+                        View All Books
+                    </a>
+                </div>
+            </div>
+            <div className="col-lg-4 offset-lg-1 shadow-lg lost-image"></div>
+        </div>
     </div>
 );
